@@ -26,7 +26,7 @@ local function step(character)
 	humanoidRootPart.StepSound.PlaybackSpeed = stepSound.speed
 
 	humanoidRootPart.StepSound:Play()
-	task.wait(0.05)
+	task.wait(0.25)
 	humanoidRootPart.StepSound:Stop()
 end
 
@@ -36,6 +36,8 @@ RunService.RenderStepped:Connect(function()
 
 		if not character then return end
 		if not character:FindFirstChild("Humanoid") then return end
+
+		character.HumanoidRootPart.Running.Volume = 0
 
 		local humanoid = character.Humanoid
 		local animator = humanoid.Animator

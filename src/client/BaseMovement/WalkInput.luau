@@ -10,7 +10,7 @@ local minRunSpeed = MovementConfig.MinRunSpeed
 InputManager.addInput("Walk", {
 	Keys = { Enum.KeyCode.LeftControl },
 	OnBegan = function()
-		MovementConfig.MaxRunSpeed = minRunSpeed
+		MovementConfig.MaxRunSpeed = minRunSpeed * 2
 		RunWatcher:Fire()
 	end,
 	OnEnded = function()

@@ -44,9 +44,11 @@ local function setupInput(input: InputTable)
 		`{input.OnBegan and "OnBegan" or "None"}_{input.OnEnded and "OnEnded" or "None"}`,
 		function(_, state: Enum.UserInputState)
 			for _, key in input.HoldingRequirements do
-				if not UserInputService:IsKeyDown(key) then return end
+				if not UserInputService:IsKeyDown(key) then return Enum.ContextActionResult.Pass end
 			end
 			if inputFunctions[state] then inputFunctions[state](input.OnBegan, input.OnEnded) end
+
+			return Enum.ContextActionResult.Pass
 		end,
 		input.TouchButton,
 		unpack(input.Keys)
