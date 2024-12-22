@@ -1,5 +1,9 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local RunService = game:GetService("RunService")
+
+local Schedules = require(ReplicatedStorage.Shared.Schedules)
 
 local localPlayer = Players.LocalPlayer
 
@@ -19,12 +23,16 @@ local RootC0
 local RightHipC0
 local LeftHipC0
 
-local function calculate(dT, plr, HRP, Humanoid, Torso)
-	local movementDir = HRP.CFrame:VectorToObjectSpace(HRP.AssemblyLinearVelocity)
+local function calculate(dT, character)
+	local rootPart = character.HumanoidRootPart
+	local humanoid = character.Humanoid
+	local torso = character.Torso
 
-	if plr:GetAttribute("CharacterBusy") == true then movementDir = Vector3.zero end
+	local movementDir = rootPart.CFrame:VectorToObjectSpace(rootPart.AssemblyLinearVelocity)
 
-	movementDir = Vector3.new(movementDir.X / Humanoid.WalkSpeed, 0, movementDir.Z / Humanoid.WalkSpeed)
+	if character:GetAttribute("CharacterBusy") == true then movementDir = Vector3.zero end
+
+	movementDir = Vector3.new(movementDir.X / humanoid.WalkSpeed, 0, movementDir.Z / humanoid.WalkSpeed)
 
 	local x = (movementDir.X * (RangeOfMotion - (math.abs(movementDir.Z) * (RangeOfMotion / 2))))
 	local xTorso = (movementDir.X * (RangeOfMotionTorso - (math.abs(movementDir.Z) * (RangeOfMotion / 2))))
@@ -45,19 +53,19 @@ local function calculate(dT, plr, HRP, Humanoid, Torso)
 
 	local lerpTime = 1 - LerpSpeed * dT
 
-	Torso["Right Hip"].C0 = Torso["Right Hip"].C0:Lerp(rightHip, lerpTime)
-	Torso["Left Hip"].C0 = Torso["Left Hip"].C0:Lerp(leftHip, lerpTime)
-	HRP.RootJoint.C0 = HRP.RootJoint.C0:Lerp(root, lerpTime)
+	torso["Right Hip"].C0 = torso["Right Hip"].C0:Lerp(rightHip, lerpTime)
+	torso["Left Hip"].C0 = torso["Left Hip"].C0:Lerp(leftHip, lerpTime)
+	rootPart.RootJoint.C0 = rootPart.RootJoint.C0:Lerp(root, lerpTime)
 
-	if not TiltCFrames[plr] then TiltCFrames[plr] = CFrame.new() end
+	if not TiltCFrames[character] then TiltCFrames[character] = CFrame.new() end
 
-	local MoveDirection = HRP.CFrame:VectorToObjectSpace(Humanoid.MoveDirection)
-	TiltCFrames[plr] = TiltCFrames[plr]:Lerp(
+	local MoveDirection = rootPart.CFrame:VectorToObjectSpace(humanoid.MoveDirection)
+	TiltCFrames[character] = TiltCFrames[character]:Lerp(
 		CFrame.Angles(math.rad(-MoveDirection.Z) * maxBodyTilting, math.rad(-MoveDirection.X) * maxBodyTilting, 0),
 		0.2 * (1 / (dT * 60))
 	)
 
-	HRP.RootJoint.C0 = RootC0 * TiltCFrames[plr]
+	rootPart.RootJoint.C0 = RootC0 * TiltCFrames[character]
 end
 
 local function setupVariables(character)
@@ -72,26 +80,47 @@ local function setupVariables(character)
 	LeftHipC0 = torso["Left Hip"].C0
 end
 
-localPlayer.CharacterAdded:Connect(setupVariables)
-
 RunService.RenderStepped:Connect(function(dT)
-	for _, plr in Players:GetPlayers() do
-		if not plr.Character then continue end
-		if table.find(PlayersTable, plr) then continue end
+	for _, player in PlayersTable do
+		if not player or not player.Character then continue end
 
-		table.insert(PlayersTable, plr)
-	end
-
-	for _, plr in PlayersTable do
-		if not plr or not plr.Character then table.remove(PlayersTable, plr) end
-
-		local character = plr.Character
+		local character = player.Character
 
 		if not character:FindFirstChild("HumanoidRootPart") then continue end
 		if not RightHipC0 then setupVariables(localPlayer.Character) end
 
-		calculate(dT, plr, character.HumanoidRootPart, character.Humanoid, character.Torso)
+		calculate(dT, character)
 	end
 end)
 
-return 0
+local function initPlayer(player)
+	table.insert(PlayersTable, player)
+
+	player.CharacterRemoving:Connect(function(character)
+		if not TiltCFrames[character] then return end
+
+		TiltCFrames[character] = nil
+	end)
+end
+
+local function handleConnections()
+	if localPlayer.Character then setupVariables(localPlayer.Character) end
+
+	localPlayer.CharacterAdded:Connect(setupVariables)
+
+	for _, player in Players:GetPlayers() do
+		initPlayer(player)
+	end
+
+	Players.PlayerAdded:Connect(initPlayer)
+
+	Players.PlayerRemoving:Connect(function(player)
+		local i = table.find(PlayersTable, player)
+
+		if not i then return end
+
+		table.remove(PlayersTable, i)
+	end)
+end
+
+return Schedules["Boot"].job(handleConnections)

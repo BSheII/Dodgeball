@@ -3,9 +3,19 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local Schedules = require(ReplicatedStorage.Shared.Schedules)
 local Signal = require(ReplicatedStorage.Packages.Signal)
 
 local localPlayer = Players.LocalPlayer
+
+local renderStepped
+
+local camera = workspace.CurrentCamera
+local cameraOffset = Vector3.new(2, 0.5, 5)
+local yOffset = cameraOffset * Vector3.yAxis
+local xzOffset = CFrame.new(cameraOffset * (Vector3.xAxis + Vector3.zAxis))
+
+local initCameraCFrame = camera.CFrame
 
 local module = {}
 module.Signal = Signal.new()
@@ -15,31 +25,50 @@ module.Signal:Connect(function()
 	module.FirstPerson = not module.FirstPerson
 end)
 
-RunService.RenderStepped:Connect(function(dt)
-	local camera = workspace.CurrentCamera
-
-	camera.CameraType = Enum.CameraType.Scriptable
-
-	local character = localPlayer.Character
-
-	if not character then return end
-	if not character:FindFirstChild("HumanoidRootPart") then return end
-
-	local root = character.HumanoidRootPart
-
-	character.Humanoid.AutoRotate = false
-	UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
-
-	local mouseDelta = UserInputService:GetMouseDelta().X
-
-	character.HumanoidRootPart.CFrame *= CFrame.Angles(0, -mouseDelta * dt, 0)
-
-	if module.FirstPerson then
-		camera.CFrame = CFrame.lookAlong(root.Position + root.CFrame.UpVector, root.CFrame.LookVector)
-	else
-		local offset = (root.CFrame.LookVector * -7) + (root.CFrame.UpVector * 2) + (root.CFrame.RightVector * 2)
-		camera.CFrame = CFrame.lookAlong(root.Position + offset, root.CFrame.LookVector)
-	end
+RunService:BindToRenderStep("Reset Camera", Enum.RenderPriority.First.Value, function()
+	camera.CFrame = initCameraCFrame
 end)
+
+local function initCharacter(character)
+	if renderStepped then renderStepped:Disconnect() end
+
+	character.Humanoid.Died:Connect(function()
+		renderStepped:Disconnect()
+		renderStepped = nil
+	end)
+
+	local humanoid = character.Humanoid
+	local rootPart = character.HumanoidRootPart
+
+	renderStepped = RunService.RenderStepped:Connect(function()
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+
+		initCameraCFrame = camera.CFrame
+
+		if module.FirstPerson == true then
+			humanoid.CameraOffset = Vector3.zero
+			humanoid.AutoRotate = true
+
+			camera.CFrame = initCameraCFrame * CFrame.new(0, 0, 0)
+		else
+			camera.CFrame = initCameraCFrame * xzOffset
+
+			humanoid.CameraOffset = yOffset
+			humanoid.AutoRotate = false
+		end
+
+		local _, y, _ = camera.CFrame:ToEulerAnglesYXZ()
+		local rootCFrame = CFrame.Angles(0, y, 0)
+		rootPart.CFrame = rootCFrame + rootPart.Position
+	end)
+end
+
+local function handleConnections()
+	if localPlayer.Character then initCharacter(localPlayer.Character) end
+
+	localPlayer.CharacterAdded:Connect(initCharacter)
+end
+
+Schedules["Boot"].job(handleConnections)
 
 return module

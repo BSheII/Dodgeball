@@ -4,8 +4,11 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
+local Schedules = require(ReplicatedStorage.Shared.Schedules)
 
 local localPlayer = Players.LocalPlayer
+
+local renderStepped
 
 local function isRunning()
 	return UserInputService:IsKeyDown(Enum.KeyCode.W)
@@ -23,13 +26,25 @@ local function adjustWalkSpeed(humanoid, dt)
 	end
 end
 
-RunService.RenderStepped:Connect(function(dt)
-	local character = localPlayer.Character
+local function initCharacter(character)
+	if renderStepped then renderStepped:Disconnect() end
 
-	if not character then return end
-	if not character:FindFirstChild("Humanoid") then return end
+	character.Humanoid.Died:Connect(function()
+		renderStepped:Disconnect()
+		renderStepped = nil
+	end)
 
-	adjustWalkSpeed(character.Humanoid, dt)
-end)
+	local humanoid = character.Humanoid
 
-return 0
+	renderStepped = RunService.RenderStepped:Connect(function(dt)
+		adjustWalkSpeed(humanoid, dt)
+	end)
+end
+
+local function handleConnections()
+	if localPlayer.Character then initCharacter(localPlayer.Character) end
+
+	localPlayer.CharacterAdded:Connect(initCharacter)
+end
+
+return Schedules["Boot"].job(handleConnections)

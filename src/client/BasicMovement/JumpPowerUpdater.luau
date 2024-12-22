@@ -1,32 +1,29 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
 local Schedules = require(ReplicatedStorage.Shared.Schedules)
 
-local currentCamera = workspace.CurrentCamera
 local localPlayer = Players.LocalPlayer
-
-local maxRunSpeed = MovementConfig.MaxRunSpeed
-local minRunSpeed = MovementConfig.MinRunSpeed
-
-local maxRunSpeedFOV = 85
-local minRunSpeedFOV = 80
-local increment = 80 -- Just the base FOV basically (when at minRunSpeedFOV)
 
 local renderStepped
 
-local function calculateFOV(walkSpeed)
-	local m = (maxRunSpeedFOV - minRunSpeedFOV) / (maxRunSpeed - minRunSpeed)
-	local y = m * (walkSpeed - minRunSpeed) + increment
-
-	return y
+local function isRunning()
+	return UserInputService:IsKeyDown(Enum.KeyCode.W)
 end
 
-local function Lerp(a: number, b: number, t: number): number
-	return a + (b - a) * t
+local function adjustJumpPower(humanoid, dt)
+	local currentPower = humanoid.JumpPower
+	local targetPower = if isRunning() then MovementConfig.MaxJumpPower else MovementConfig.MinJumpPower
+	local rate = if currentPower < targetPower then MovementConfig.AccelerationRate else MovementConfig.DecelerationRate
+
+	if humanoid.MoveDirection.Magnitude == 0 then
+		humanoid.JumpPower = MovementConfig.MinJumpPower
+	else
+		humanoid.JumpPower = currentPower + math.clamp(targetPower - currentPower, -rate * dt, rate * dt)
+	end
 end
 
 local function initCharacter(character)
@@ -40,7 +37,7 @@ local function initCharacter(character)
 	local humanoid = character.Humanoid
 
 	renderStepped = RunService.RenderStepped:Connect(function(dt)
-		currentCamera.FieldOfView = Lerp(currentCamera.FieldOfView, calculateFOV(humanoid.WalkSpeed), dt)
+		adjustJumpPower(humanoid, dt)
 	end)
 end
 
