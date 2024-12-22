@@ -1,21 +1,26 @@
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
+
 local localPlayer = Players.LocalPlayer
 
-local targetSpeed = 32
-local accelerationTime = 0.65
-local deaccelerationTime = 0.2
+local function isRunning()
+	return UserInputService:IsKeyDown(Enum.KeyCode.W)
+end
 
 local function adjustWalkSpeed(humanoid, dt)
 	local currentSpeed = humanoid.WalkSpeed
-	local speedDiff = targetSpeed - currentSpeed
+	local targetSpeed = if isRunning() then MovementConfig.MaxRunSpeed else MovementConfig.MinRunSpeed
+	local rate = if currentSpeed < targetSpeed then MovementConfig.AccelerationRate else MovementConfig.DecelerationRate
 
-	if not UserInputService:IsKeyDown(Enum.KeyCode.W) then return end
-
-	local lerpAlpha = (speedDiff > 0 and dt / accelerationTime or dt / deaccelerationTime)
-	humanoid.WalkSpeed = currentSpeed + speedDiff * math.clamp(lerpAlpha, 0, 1)
+	if humanoid.MoveDirection.Magnitude == 0 then
+		humanoid.WalkSpeed = MovementConfig.MinRunSpeed
+	else
+		humanoid.WalkSpeed = currentSpeed + math.clamp(targetSpeed - currentSpeed, -rate * dt, rate * dt)
+	end
 end
 
 RunService.RenderStepped:Connect(function(dt)
