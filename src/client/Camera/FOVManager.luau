@@ -12,9 +12,9 @@ local localPlayer = Players.LocalPlayer
 local maxRunSpeed = MovementConfig.MaxRunSpeed
 local minRunSpeed = MovementConfig.MinRunSpeed
 
-local maxRunSpeedFOV = 85
-local minRunSpeedFOV = 80
-local increment = 80 -- Just the base FOV basically (when at minRunSpeedFOV)
+local maxRunSpeedFOV = 105
+local minRunSpeedFOV = 95
+local increment = 90 -- Just the base FOV basically (when at minRunSpeedFOV)
 
 local renderStepped
 
@@ -33,6 +33,8 @@ local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
 	character.Humanoid.Died:Connect(function()
+		if not renderStepped then return end
+
 		renderStepped:Disconnect()
 		renderStepped = nil
 	end)

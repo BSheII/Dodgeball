@@ -39,30 +39,25 @@ function module.addInput(inputName: string, inputTable: InputTable)
 	inputs[inputName] = inputTable
 end
 
-local function setupInput(input: InputTable)
-	ContextActionService:BindAction(
-		`{input.OnBegan and "OnBegan" or "None"}_{input.OnEnded and "OnEnded" or "None"}`,
-		function(_, state: Enum.UserInputState)
-			for _, key in input.HoldingRequirements do
-				if not UserInputService:IsKeyDown(key) then return Enum.ContextActionResult.Pass end
-			end
-			if inputFunctions[state] then inputFunctions[state](input.OnBegan, input.OnEnded) end
+local function setupInput(input: InputTable, name: string)
+	ContextActionService:BindAction(name, function(_, state: Enum.UserInputState)
+		for _, key in input.HoldingRequirements do
+			if not UserInputService:IsKeyDown(key) then return Enum.ContextActionResult.Pass end
+		end
+		if inputFunctions[state] then inputFunctions[state](input.OnBegan, input.OnEnded) end
 
-			return Enum.ContextActionResult.Pass
-		end,
-		input.TouchButton,
-		unpack(input.Keys)
-	)
+		return Enum.ContextActionResult.Pass
+	end, input.TouchButton, unpack(input.Keys))
 end
 
 local function init()
-	for _, input in inputs do
-		setupInput(input)
+	for name, input in inputs do
+		setupInput(input, name)
 	end
 
 	local inputMt = {
 		__newindex = function(t: any, i: string, v: InputTable)
-			setupInput(v)
+			setupInput(v, i)
 			rawset(t, i, v)
 		end,
 	}

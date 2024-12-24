@@ -2,6 +2,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local VaultHandler = require(ReplicatedStorage.Modules.AdvancedMovement.VaultHandler)
+
 local UIAssets = ReplicatedStorage.Assets.UI
 
 local localPlayer = Players.LocalPlayer
@@ -24,9 +26,11 @@ local function GetDebugMovementValues()
 	local values = {}
 
 	values["Velocity (Horizontal)"] = string.format("%.2f", (assemblyVelocity * (Vector3.xAxis + Vector3.zAxis)).Magnitude)
-	values["Velocity (Vertical)"] = string.format("%.2f", (assemblyVelocity * Vector3.yAxis).Magnitude)
+	values["Velocity (Vertical)"] = string.format("%.2f", (assemblyVelocity * Vector3.yAxis).Y)
 	values["Running speed"] = math.round(humanoid.WalkSpeed)
 	values["Jump power"] = math.round(humanoid.JumpPower)
+	values["Studs"] = string.format("%.2f", VaultHandler.VaultStuds)
+	values["Boost"] = string.format("%.2f", VaultHandler.VaultBoost)
 
 	return values
 end

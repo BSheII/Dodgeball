@@ -42,7 +42,7 @@ local function calculate(dT, character)
 		x *= -1
 		xTorso *= -1
 		xXZ *= -1
-		maxBodyTilting = 19
+		maxBodyTilting = 16
 	else
 		maxBodyTilting = 11
 	end
@@ -62,7 +62,7 @@ local function calculate(dT, character)
 	local MoveDirection = rootPart.CFrame:VectorToObjectSpace(humanoid.MoveDirection)
 	TiltCFrames[character] = TiltCFrames[character]:Lerp(
 		CFrame.Angles(math.rad(-MoveDirection.Z) * maxBodyTilting, math.rad(-MoveDirection.X) * maxBodyTilting, 0),
-		0.2 * (1 / (dT * 60))
+		math.clamp(dT * 5, 0, 1)
 	)
 
 	rootPart.RootJoint.C0 = RootC0 * TiltCFrames[character]

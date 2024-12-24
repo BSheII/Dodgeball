@@ -15,6 +15,15 @@ local viewableParts = {
 	"Right Leg",
 }
 
+local noCollideParts = {
+	"Head",
+	"Torso",
+	"Left Arm",
+	"Right Arm",
+	"Left Leg",
+	"Right Leg",
+}
+
 local renderStepped
 
 local function FirstPerson(character)
@@ -22,7 +31,6 @@ local function FirstPerson(character)
 		if not part:IsA("BasePart") then continue end
 		if not table.find(viewableParts, part.Name) then
 			part.LocalTransparencyModifier = 1
-			part.CanCollide = false
 			continue
 		end
 
@@ -38,13 +46,25 @@ local function ThirdPerson(character)
 	end
 end
 
+local function setCanCollide(character) -- TODO: Change this to somewhere else
+	for _, partName in noCollideParts do
+		if not character:FindFirstChild(partName) then continue end
+
+		character[partName].CanCollide = false
+	end
+end
+
 local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
 	character.Humanoid.Died:Connect(function()
+		if not renderStepped then return end
+
 		renderStepped:Disconnect()
 		renderStepped = nil
 	end)
+
+	setCanCollide(character)
 
 	renderStepped = RunService.RenderStepped:Connect(function()
 		if CameraSubjectSwitcher.FirstPerson == true then

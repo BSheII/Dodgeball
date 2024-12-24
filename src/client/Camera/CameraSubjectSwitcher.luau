@@ -33,6 +33,8 @@ local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
 	character.Humanoid.Died:Connect(function()
+		if not renderStepped then return end
+
 		renderStepped:Disconnect()
 		renderStepped = nil
 	end)
@@ -49,7 +51,7 @@ local function initCharacter(character)
 			humanoid.CameraOffset = Vector3.zero
 			humanoid.AutoRotate = true
 
-			camera.CFrame = initCameraCFrame * CFrame.new(0, 0, 0)
+			camera.CFrame = initCameraCFrame * CFrame.new(0, 0, 0.2)
 		else
 			camera.CFrame = initCameraCFrame * xzOffset
 

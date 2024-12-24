@@ -30,6 +30,8 @@ local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
 	character.Humanoid.Died:Connect(function()
+		if not renderStepped then return end
+
 		renderStepped:Disconnect()
 		renderStepped = nil
 	end)
