@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local ParkourAnimations = ReplicatedStorage.Assets.Animations.Parkour
+local SoundsAssets = ReplicatedStorage.Assets.Sounds
 
 local AnimationsManager = require(ReplicatedStorage.Modules.Animations.AnimationsManager)
 local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
@@ -89,6 +90,7 @@ module.Signal:Connect(function()
 	character:SetAttribute("Swinging", true)
 
 	swingAnimation:Play(0.1)
+	SoundsAssets.Swing:Play()
 
 	local root = character.HumanoidRootPart
 	local lkVector = root.CFrame.LookVector

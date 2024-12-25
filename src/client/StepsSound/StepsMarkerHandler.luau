@@ -9,6 +9,8 @@ local SteppingSounds = require(ReplicatedStorage.Modules.StepsSound.SteppingSoun
 local checkedAnimations = {}
 
 local function step(character)
+	if not character:FindFirstChild("HumanoidRootPart") then return end
+
 	local humanoid = character.Humanoid
 	local humanoidRootPart = character.HumanoidRootPart
 
@@ -34,7 +36,7 @@ RunService.RenderStepped:Connect(function()
 		local character = player.Character
 
 		if not character then return end
-		if not character:FindFirstChild("Humanoid") then return end
+		if not character:FindFirstChild("Humanoid") or not character:FindFirstChild("HumanoidRootPart") then return end
 
 		character.HumanoidRootPart.Running.Volume = 0
 

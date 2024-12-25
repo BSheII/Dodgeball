@@ -4,9 +4,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local ParkourAnimations = ReplicatedStorage.Assets.Animations.Parkour
+local SoundsAssets = ReplicatedStorage.Assets.Sounds
 
 local AnimationsManager = require(ReplicatedStorage.Modules.Animations.AnimationsManager)
 local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
+local RollNotifier = require(ReplicatedStorage.Modules.Notifications.RollNotifier)
 local Schedules = require(ReplicatedStorage.Shared.Schedules)
 
 local localPlayer = Players.LocalPlayer
@@ -53,9 +55,17 @@ local function initCharacter(character)
 
 		local rollTrack = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Roll)
 		rollTrack:Play()
-		rollTrack:AdjustSpeed(1.5)
+		rollTrack:AdjustSpeed(1.25)
+
+		RollNotifier:Fire(currentDifference)
 
 		local walkSpeed = calculateBoost(currentDifference)
+
+		if currentDifference < 0.05 then
+			SoundsAssets.GoodRoll:Play()
+		else
+			SoundsAssets.BadRoll:Play()
+		end
 
 		humanoid.WalkSpeed = walkSpeed
 

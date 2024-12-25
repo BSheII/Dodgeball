@@ -16,7 +16,10 @@ end
 
 local function adjustJumpPower(humanoid, dt)
 	local currentPower = humanoid.JumpPower
+	local walkSpeed = humanoid.WalkSpeed
+	local walkSpeedBoost = math.max(walkSpeed / MovementConfig.MaxRunSpeed, 1)
 	local targetPower = if isRunning() then MovementConfig.MaxJumpPower else MovementConfig.MinJumpPower
+	targetPower *= walkSpeedBoost
 	local rate = if currentPower < targetPower then MovementConfig.AccelerationRate else MovementConfig.DecelerationRate
 
 	if humanoid.MoveDirection.Magnitude == 0 then

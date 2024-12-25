@@ -54,10 +54,17 @@ local function setCanCollide(character) -- TODO: Change this to somewhere else
 	end
 end
 
+local function setMouseIcon(player) -- TODO: Change this to somewhere else as well (oh I know this is gonna pile up)
+	local mouse = player:GetMouse()
+
+	mouse.Icon = "rbxassetid://15722065980"
+end
+
 local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
 	setCanCollide(character)
+	setMouseIcon(Players:GetPlayerFromCharacter(character))
 
 	character.Humanoid.Died:Connect(function()
 		if not renderStepped then return end

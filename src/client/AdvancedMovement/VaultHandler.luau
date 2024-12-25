@@ -2,10 +2,12 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ParkourAnimations = ReplicatedStorage.Assets.Animations.Parkour
+local SoundsAssets = ReplicatedStorage.Assets.Sounds
 
 local AnimationsManager = require(ReplicatedStorage.Modules.Animations.AnimationsManager)
 local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
 local Signal = require(ReplicatedStorage.Packages.Signal)
+local VaultNotifier = require(ReplicatedStorage.Modules.Notifications.VaultNotifier)
 
 local module = {}
 module.Signal = Signal.new()
@@ -119,6 +121,8 @@ module.Signal:Connect(function()
 	local boost = calculateBoost(heightDifference, assemblyMass)
 
 	vaultAnimation:Play(0.1)
+	SoundsAssets.Vault:Play()
+	VaultNotifier:Fire(heightDifference)
 
 	module.VaultStuds = heightDifference
 	module.VaultBoost = boost
