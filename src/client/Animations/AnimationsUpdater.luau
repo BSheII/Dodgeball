@@ -10,9 +10,11 @@ local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
 local Schedules = require(ReplicatedStorage.Shared.Schedules)
 
 local localPlayer = Players.LocalPlayer
+local animations = { fall = nil, jump = nil, vault = nil, swing = nil, slide = nil }
 
 local renderStepped
 local hasJumped = false
+local jumping = false
 
 local function playAnimation(animation)
 	if animation.IsPlaying then return end
@@ -26,21 +28,22 @@ local function stopAnimations(...)
 	end
 end
 
-local function handleAirborneState(humanoidState, jumpAnimation, fallAnimation)
+local function handleAirborneState(humanoidState)
 	if humanoidState == Enum.HumanoidStateType.Freefall or humanoidState == Enum.HumanoidStateType.Jumping then
 		if hasJumped then
-			playAnimation(fallAnimation)
-		else
-			playAnimation(jumpAnimation)
+			playAnimation(animations.fall)
+		elseif jumping then
+			playAnimation(animations.jump)
+			jumping = false
 		end
 	else
-		stopAnimations(fallAnimation, jumpAnimation)
+		stopAnimations(animations.fall, animations.jump)
 	end
 end
 
-local function handleGroundedState(jumpAnimation, fallAnimation, vaultAnimation, swingAnimation)
+local function handleGroundedState()
 	hasJumped = false
-	stopAnimations(jumpAnimation, fallAnimation, vaultAnimation, swingAnimation)
+	stopAnimations(animations.jump, animations.fall, animations.vault, animations.swing)
 end
 
 local function initCharacter(character)
@@ -49,6 +52,13 @@ local function initCharacter(character)
 	local humanoid = character.Humanoid
 	local humanoidRootPart = character.HumanoidRootPart
 
+	animations.run = AnimationsManager.GetTrack(humanoid.Animator, PlayerAnimations.Run)
+	animations.jump = AnimationsManager.GetTrack(humanoid.Animator, PlayerAnimations.Jump)
+	animations.fall = AnimationsManager.GetTrack(humanoid.Animator, PlayerAnimations.Fall)
+	animations.vault = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Vault)
+	animations.swing = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Swing)
+	animations.slide = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Slide)
+
 	humanoid.Died:Connect(function()
 		if not renderStepped then return end
 
@@ -56,36 +66,44 @@ local function initCharacter(character)
 		renderStepped = nil
 	end)
 
-	local runAnimation = AnimationsManager.GetTrack(humanoid.Animator, PlayerAnimations.Run)
-	local jumpAnimation = AnimationsManager.GetTrack(humanoid.Animator, PlayerAnimations.Jump)
-	local fallAnimation = AnimationsManager.GetTrack(humanoid.Animator, PlayerAnimations.Fall)
-	local vaultAnimation = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Vault)
-	local swingAnimation = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Swing)
+	humanoid.Jumping:Connect(function(isJumping)
+		if not isJumping then return end
+
+		jumping = true
+	end)
+
+	animations.jump.Ended:Connect(function()
+		hasJumped = true
+	end)
 
 	renderStepped = RunService.RenderStepped:Connect(function()
 		if character:FindFirstChild("Animate") then character.Animate.Enabled = false end
 
 		local movementDirZ = humanoidRootPart.CFrame:VectorToObjectSpace(humanoidRootPart.AssemblyLinearVelocity).Z / humanoid.WalkSpeed
 
-		runAnimation:AdjustSpeed(((humanoid.WalkSpeed / MovementConfig.MaxRunSpeed) + 0.25) * (movementDirZ > 0.1 and -1 or 1))
+		animations.run:AdjustSpeed(((humanoid.WalkSpeed / MovementConfig.MaxRunSpeed) + 0.25) * (movementDirZ > 0.1 and -1 or 1))
 
 		local floorMaterial = humanoid.FloorMaterial
 		local humanoidState = humanoid:GetState()
 		local directionMagnitude = humanoid.MoveDirection.Magnitude
 
-		if directionMagnitude == 0 or floorMaterial == Enum.Material.Air then runAnimation:Stop(0.3) end
+		if directionMagnitude == 0 or floorMaterial == Enum.Material.Air then stopAnimations(animations.run, animations.slide) end
 
 		if floorMaterial == Enum.Material.Air then
-			handleAirborneState(humanoidState, jumpAnimation, fallAnimation)
+			handleAirborneState(humanoidState)
 		else
-			handleGroundedState(jumpAnimation, fallAnimation, vaultAnimation, swingAnimation)
+			handleGroundedState()
 		end
 
-		if directionMagnitude ~= 0 and floorMaterial ~= Enum.Material.Air then playAnimation(runAnimation) end
-	end)
-
-	jumpAnimation.Ended:Connect(function()
-		hasJumped = true
+		if directionMagnitude ~= 0 and floorMaterial ~= Enum.Material.Air then
+			if character:GetAttribute("Sliding") then
+				playAnimation(animations.slide)
+				stopAnimations(animations.run)
+			else
+				playAnimation(animations.run)
+				stopAnimations(animations.slide)
+			end
+		end
 	end)
 end
 

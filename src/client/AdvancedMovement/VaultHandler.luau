@@ -15,7 +15,7 @@ module.VaultBoost = 0
 local localPlayer = Players.LocalPlayer
 local debounce = false
 
-local yMultiplier = 1.35
+local yMultiplier = 0.7
 local xzMuliplier = 1.05
 
 local overlapParams = OverlapParams.new()
@@ -123,8 +123,10 @@ module.Signal:Connect(function()
 	module.VaultStuds = heightDifference
 	module.VaultBoost = boost
 
-	rootPart.AssemblyLinearVelocity = Vector3.new(assemblyVelocity.X * xzMuliplier, 5 + boost, assemblyVelocity.Z * xzMuliplier)
+	rootPart.AssemblyLinearVelocity = Vector3.new(assemblyVelocity.X * xzMuliplier, 25 + boost, assemblyVelocity.Z * xzMuliplier)
 	humanoid.WalkSpeed += 6
+
+	print(25 + boost)
 
 	return true
 end)

@@ -14,7 +14,11 @@ local function isRunning()
 	return UserInputService:IsKeyDown(Enum.KeyCode.W)
 end
 
-local function adjustWalkSpeed(humanoid, dt)
+local function adjustWalkSpeed(character, dt)
+	local humanoid = character.Humanoid
+
+	if character:GetAttribute("Sliding") == true then return end
+
 	local currentSpeed = humanoid.WalkSpeed
 	local targetSpeed = if isRunning() then MovementConfig.MaxRunSpeed else MovementConfig.MinRunSpeed
 	local rate = if currentSpeed < targetSpeed then MovementConfig.AccelerationRate else MovementConfig.DecelerationRate
@@ -36,10 +40,8 @@ local function initCharacter(character)
 		renderStepped = nil
 	end)
 
-	local humanoid = character.Humanoid
-
 	renderStepped = RunService.RenderStepped:Connect(function(dt)
-		adjustWalkSpeed(humanoid, dt)
+		adjustWalkSpeed(character, dt)
 	end)
 end
 

@@ -7,22 +7,26 @@ type InputTable = {
 	OnEnded: (() -> ())?,
 	HoldingRequirements: { Enum.KeyCode | Enum.UserInputType },
 	TouchButton: boolean,
+	Priority: Enum.ContextActionPriority,
 }
 
 type Module = {
 	addInput: (string, InputTable) -> (),
-	addAction: (string, () -> ()) -> (),
 }
 
 local inputs: { [string]: InputTable } = {}
 
 local inputFunctions: { [Enum.UserInputState]: ((() -> ())?, (() -> ())?) -> () } = {
 	[Enum.UserInputState.Begin] = function(onBegan: (() -> ())?)
-		if onBegan then onBegan() end
+		if onBegan then return onBegan() end
+
+		return
 	end,
 
 	[Enum.UserInputState.End] = function(_, onEnded: (() -> ())?)
-		if onEnded then onEnded() end
+		if onEnded then return onEnded() end
+
+		return
 	end,
 }
 
@@ -36,6 +40,7 @@ function module.addInput(inputName: string, inputTable: InputTable)
 	if not inputTable.OnBegan and not inputTable.OnEnded then return end
 	inputTable.HoldingRequirements = inputTable.HoldingRequirements or {}
 	inputTable.TouchButton = inputTable.TouchButton or false
+	inputTable.Priority = inputTable.Priority or Enum.ContextActionPriority.High
 	inputs[inputName] = inputTable
 end
 
@@ -44,9 +49,9 @@ local function setupInput(input: InputTable, name: string)
 		for _, key in input.HoldingRequirements do
 			if not UserInputService:IsKeyDown(key) then return Enum.ContextActionResult.Pass end
 		end
-		if inputFunctions[state] then inputFunctions[state](input.OnBegan, input.OnEnded) end
+		if inputFunctions[state] then return inputFunctions[state](input.OnBegan, input.OnEnded) or Enum.ContextActionResult.Pass end
 
-		return Enum.ContextActionResult.Pass
+		return
 	end, input.TouchButton, unpack(input.Keys))
 end
 
