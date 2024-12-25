@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
 local Signal = require(ReplicatedStorage.Packages.Signal)
 
 local module = {}
@@ -13,13 +14,6 @@ module.Sliding = false
 local localPlayer = Players.LocalPlayer
 local renderStepped
 
-local Config = {
-	MaxSpeed = 100,
-	AccelerationRate = 50,
-	DecelerationRate = 100,
-	MinSpeedThreshold = 5,
-}
-
 local lastYPosition
 local bodyVelocity
 
@@ -28,9 +22,9 @@ local function applySlopeBasedVelocity(rootPart, currentY, dt)
 	local assemblyVelocity = rootPart.AssemblyLinearVelocity
 	local horizontalVelocity = Vector3.new(assemblyVelocity.X, 0, assemblyVelocity.Z)
 
-	local maxSpeed = Config.MaxSpeed
-	local acceleration = Config.AccelerationRate
-	local deceleration = Config.DecelerationRate
+	local maxSpeed = MovementConfig.SlideMaxSpeed
+	local acceleration = MovementConfig.SlideAccelerationRate
+	local deceleration = MovementConfig.SlideDecelerationRate
 
 	if lastYPosition then
 		local heightDifference = lastYPosition - currentY
@@ -67,7 +61,12 @@ local function slide(character, dt)
 	applySlopeBasedVelocity(rootPart, rootPart.Position.Y, dt)
 	lastYPosition = rootPart.Position.Y
 
-	if not raycastResult or not UserInputService:IsKeyDown(Enum.KeyCode.W) or bodyVelocity.Velocity.Magnitude < Config.MinSpeedThreshold then
+	if
+		not raycastResult
+		or not UserInputService:IsKeyDown(Enum.KeyCode.W)
+		or character:GetAttribute("Rolling")
+		or bodyVelocity.Velocity.Magnitude < MovementConfig.SlideMinSpeed
+	then
 		module.Sliding = false
 		character:SetAttribute("Sliding", false)
 

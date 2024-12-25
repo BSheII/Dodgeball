@@ -57,14 +57,14 @@ end
 local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
+	setCanCollide(character)
+
 	character.Humanoid.Died:Connect(function()
 		if not renderStepped then return end
 
 		renderStepped:Disconnect()
 		renderStepped = nil
 	end)
-
-	setCanCollide(character)
 
 	renderStepped = RunService.RenderStepped:Connect(function()
 		if CameraSubjectSwitcher.FirstPerson == true then

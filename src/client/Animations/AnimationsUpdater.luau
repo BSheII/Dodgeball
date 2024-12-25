@@ -10,7 +10,7 @@ local MovementConfig = require(ReplicatedStorage.Shared.MovementConfig)
 local Schedules = require(ReplicatedStorage.Shared.Schedules)
 
 local localPlayer = Players.LocalPlayer
-local animations = { fall = nil, jump = nil, vault = nil, swing = nil, slide = nil }
+local animations = { fall = nil, jump = nil, vault = nil, swing = nil, slide = nil, roll = nil }
 
 local renderStepped
 local hasJumped = false
@@ -58,6 +58,7 @@ local function initCharacter(character)
 	animations.vault = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Vault)
 	animations.swing = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Swing)
 	animations.slide = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Slide)
+	animations.roll = AnimationsManager.GetTrack(humanoid.Animator, ParkourAnimations.Roll)
 
 	humanoid.Died:Connect(function()
 		if not renderStepped then return end
@@ -98,6 +99,8 @@ local function initCharacter(character)
 		if directionMagnitude ~= 0 and floorMaterial ~= Enum.Material.Air then
 			if character:GetAttribute("Sliding") then
 				playAnimation(animations.slide)
+				stopAnimations(animations.run)
+			elseif character:GetAttribute("Rolling") then
 				stopAnimations(animations.run)
 			else
 				playAnimation(animations.run)

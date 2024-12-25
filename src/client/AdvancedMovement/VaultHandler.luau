@@ -124,9 +124,7 @@ module.Signal:Connect(function()
 	module.VaultBoost = boost
 
 	rootPart.AssemblyLinearVelocity = Vector3.new(assemblyVelocity.X * xzMuliplier, 25 + boost, assemblyVelocity.Z * xzMuliplier)
-	humanoid.WalkSpeed += 6
-
-	print(25 + boost)
+	humanoid.WalkSpeed = MovementConfig.MaxRunSpeed + 6
 
 	return true
 end)
