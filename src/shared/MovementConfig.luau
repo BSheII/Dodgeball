@@ -20,4 +20,7 @@ return {
 
 	RollMaxSecondsTime = 1, -- Max seconds before rolling isn't valid
 	MinimumVelocityToRoll = -40, -- Minimum velocity to be able to roll
+
+	ThrowDistancePerSecond = 1.1, -- Amount added to current distance per second
+	ThrowForceBase = 1.5, -- Multiplier for the throw velocity
 }

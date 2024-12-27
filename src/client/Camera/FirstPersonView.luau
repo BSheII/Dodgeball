@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local CameraSubjectSwitcher = require(ReplicatedStorage.Modules.Camera.CameraSubjectSwitcher)
 local Schedules = require(ReplicatedStorage.Shared.Schedules)
@@ -54,17 +55,15 @@ local function setCanCollide(character) -- TODO: Change this to somewhere else
 	end
 end
 
-local function setMouseIcon(player) -- TODO: Change this to somewhere else as well (oh I know this is gonna pile up)
-	local mouse = player:GetMouse()
-
-	mouse.Icon = "rbxassetid://15722065980"
+local function setMouseIcon() -- TODO: Change this to somewhere else as well (oh I know this is gonna pile up)
+	UserInputService.MouseIcon = "rbxassetid://15722065980"
 end
 
 local function initCharacter(character)
 	if renderStepped then renderStepped:Disconnect() end
 
 	setCanCollide(character)
-	setMouseIcon(Players:GetPlayerFromCharacter(character))
+	setMouseIcon()
 
 	character.Humanoid.Died:Connect(function()
 		if not renderStepped then return end

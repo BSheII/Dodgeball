@@ -37,7 +37,9 @@ function module.addInput(inputName: string, inputTable: InputTable)
 		warn("Couldn't make Input: No input name or keys")
 		return
 	end
+
 	if not inputTable.OnBegan and not inputTable.OnEnded then return end
+
 	inputTable.HoldingRequirements = inputTable.HoldingRequirements or {}
 	inputTable.TouchButton = inputTable.TouchButton or false
 	inputTable.Priority = inputTable.Priority or Enum.ContextActionPriority.High
@@ -49,6 +51,7 @@ local function setupInput(input: InputTable, name: string)
 		for _, key in input.HoldingRequirements do
 			if not UserInputService:IsKeyDown(key) then return Enum.ContextActionResult.Pass end
 		end
+
 		if inputFunctions[state] then return inputFunctions[state](input.OnBegan, input.OnEnded) or Enum.ContextActionResult.Pass end
 
 		return
